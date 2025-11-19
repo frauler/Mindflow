@@ -1,6 +1,6 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, declared_attr
+from sqlalchemy.orm import DeclarativeBase, declared_attr, mapped_column
 from app.core.config import get_db_url, get_alembic_url
 
 DATABASE_URL = get_db_url()
