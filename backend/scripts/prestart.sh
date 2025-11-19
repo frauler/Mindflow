@@ -7,4 +7,4 @@ set -x
 python app/backend_pre_start.py
 
 # Запуск миграций
-# alembic upgrade head
+alembic upgrade head

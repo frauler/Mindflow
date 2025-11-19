@@ -17,9 +17,5 @@ class Settings(BaseSettings):
 settings = Settings()
 
 def get_db_url():
-    return (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@ \
-            {settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}")
-
-def get_alembic_url():
-    return (f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@ \
-            {settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}")
+    return (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
+            f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}")

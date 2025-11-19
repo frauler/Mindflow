@@ -1,26 +1,24 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import func, Integer, Boolean, String, Text, ForeignKey
+from sqlalchemy import func, SmallInteger, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.core.database import Base
-from typing import List
 
 class VoteModel(Base):
     __tablename__ = "votes"
 
+    __table_args__ = (
+        UniqueConstraint("user_id", "article_id", name="uix_votes_user_article"),
+    )
+
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer(), )
-    username: Mapped[str] = mapped_column(String(25), unique=True, nullable=False)
-    login: Mapped[str] = mapped_column(String(25), unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(), nullable=False)
-    is_admin: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    bio: Mapped[str] = mapped_column(Text)
-
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    article_id: Mapped[int] = mapped_column(ForeignKey("articles.id"), nullable=False)
+    value: Mapped[int] = mapped_column(SmallInteger(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=datetime.now)
 
-    votes: Mapped[List["VoteModel"]] = relationship(back_populates="user")
-    articles: Mapped[List["ArticleModel"]] = relationship(back_populates="user")
+    user: Mapped["UserModel"] = relationship(back_populates="votes")
+    article: Mapped["ArticleModel"] = relationship(back_populates="votes")
 
 from app.models.articles import ArticleModel
-from app.models.votes import VoteModel
+from app.models.users import UserModel
