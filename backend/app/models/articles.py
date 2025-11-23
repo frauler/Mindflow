@@ -1,7 +1,7 @@
 from __future__ import annotations
 import enum
 from datetime import datetime
-from sqlalchemy import func, Enum, Integer, String, Text, ForeignKey, BigInteger, text
+from sqlalchemy import func, Enum, Integer, String, Text, ForeignKey, BigInteger, DateTime, text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.core.database import Base
 from typing import List
@@ -27,13 +27,13 @@ class ArticleModel(Base):
     views_count: Mapped[int] = mapped_column(BigInteger(), server_default="0", nullable=False)
     votes_score: Mapped[int] = mapped_column(Integer(), server_default="0", nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
-    published_at: Mapped[datetime] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     user: Mapped["UserModel"] = relationship(back_populates="articles")
-    votes: Mapped[List["VoteModel"]] = relationship(back_populates="articles")
-    article_tags: Mapped[List["ArticleTagModel"]] = relationship(back_populates="articles")
+    votes: Mapped[List["VoteModel"]] = relationship(back_populates="article")
+    article_tags: Mapped[List["ArticleTagModel"]] = relationship(back_populates="article")
     medias: Mapped[List["MediaModel"]] = relationship(back_populates="article")
 
 from app.models.users import UserModel

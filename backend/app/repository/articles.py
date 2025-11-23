@@ -1,0 +1,163 @@
+from sqlalchemy import select, update, delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.articles import ArticleModel, ArticleStatus
+from app.schemas.articles import (
+    ArticleCreate,
+    ArticlePublic,
+    ArticlesPublic,
+    ArticleUpdate,
+    ArticleStatusUpdate
+)
+
+
+class ArticlesRepository:
+    """Репозиторий для работы со статьями"""
+
+    def __init__(self, db: AsyncSession):
+        """Инициализация репозитория.
+
+        Args:
+            db: Асинхронная сессия базы данных.
+        """
+        self.db = db
+        self.model = ArticleModel
+
+    # ---------------- CREATE ----------------
+    async def create_article(self, article: ArticleCreate) -> ArticlePublic:
+        """Создание новой статьи.
+
+        Args:
+            article: Данные статьи для создания.
+
+        Returns:
+            ArticlePublic: Представление созданной статьи.
+        """
+        obj = self.model(**article.model_dump())
+        self.db.add(obj)
+        await self.db.commit()
+        await self.db.refresh(obj)
+        return ArticlePublic.model_validate(obj)
+
+    # ---------------- READ ----------------
+    async def get_article_by_id(self, article_id: int) -> ArticlePublic | None:
+        """Получение статьи по ID.
+
+        Args:
+            article_id: Идентификатор статьи.
+
+        Returns:
+            ArticlePublic | None: Найденная статья или None, если запись не найдена.
+        """
+        result = await self.db.execute(
+            select(self.model).where(self.model.id == article_id)
+        )
+        obj = result.scalars().first()
+        return ArticlePublic.model_validate(obj) if obj else None
+
+    async def get_all_articles(self) -> ArticlesPublic:
+        """Получение списка всех статей.
+
+        Returns:
+            ArticlesPublic: Обёртка с массивом статей.
+        """
+        result = await self.db.execute(select(self.model))
+        articles = result.scalars().all()
+        return ArticlesPublic.model_validate({"data": articles})
+
+    # ---------------- UPDATE ----------------
+    async def update_article(self, article_id: int, new_data: ArticleUpdate) -> ArticlePublic | None:
+        """Обновление данных статьи по ID.
+
+        Args:
+            article_id: Идентификатор статьи.
+            new_data: Новые данные статьи.
+
+        Returns:
+            ArticlePublic | None: Обновлённая статья или None, если запись не найдена.
+        """
+        await self.db.execute(
+            update(self.model)
+            .where(self.model.id == article_id)
+            .values(**new_data.model_dump())
+        )
+        await self.db.commit()
+        return await self.get_article_by_id(article_id)
+
+    async def update_status(self, article_id: int, new_data: ArticleStatusUpdate) -> ArticlePublic | None:
+        """Обновление статуса статьи по ID.
+
+        Args:
+            article_id: Идентификатор статьи.
+            new_data: Новые данные для статуса статьи.
+
+        Returns:
+            ArticlePublic | None: Обновлённая статья или None, если запись не найдена.
+        """
+        values = {"status": new_data.status}
+        if new_data.status == ArticleStatus.published:
+            values["published_at"] = func.now()
+
+        await self.db.execute(
+            update(self.model)
+            .where(self.model.id == article_id)
+            .values(**values)
+        )
+        await self.db.commit()
+        return await self.get_article_by_id(article_id)
+
+    async def increment_views(self, article_id: int, delta: int = 1) -> ArticlePublic | None:
+        """Увеличение количества просмотров статьи.
+
+        Args:
+            article_id: Идентификатор статьи.
+            delta: На сколько увеличить просмотры (по умолчанию 1).
+
+        Returns:
+            ArticlePublic | None: Обновлённая статья или None, если запись не найдена.
+        """
+        await self.db.execute(
+            update(self.model)
+            .where(self.model.id == article_id)
+            .values(views_count=self.model.views_count + delta)
+        )
+        await self.db.commit()
+        return await self.get_article_by_id(article_id)
+
+    async def change_votes_score(self, article_id: int, delta: int) -> ArticlePublic | None:
+        """Изменение количества голосов статьи.
+
+        Args:
+            article_id: Идентификатор статьи.
+            delta: На сколько изменить количество голосов.
+
+        Returns:
+            ArticlePublic | None: Обновлённая статья или None, если запись не найдена.
+        """
+        await self.db.execute(
+            update(self.model)
+            .where(self.model.id == article_id)
+            .values(votes_score=self.model.votes_score + delta)
+        )
+        await self.db.commit()
+        return await self.get_article_by_id(article_id)
+
+    # ---------------- DELETE ----------------
+    async def delete_article(self, article_id: int) -> ArticlePublic | None:
+        """Удаление статьи по ID.
+
+        Args:
+            article_id: Идентификатор статьи.
+
+        Returns:
+            ArticlePublic | None: Удалённая статья или None, если запись не найдена.
+        """
+        article = await self.get_article_by_id(article_id)
+        if article is None:
+            return None
+
+        await self.db.execute(
+            delete(self.model)
+            .where(self.model.id == article_id)
+        )
+        await self.db.commit()
+        return article

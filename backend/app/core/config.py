@@ -7,6 +7,8 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str
     SECRET_KEY: str
     POSTGRES_HOST: str
     POSTGRES_PORT: int

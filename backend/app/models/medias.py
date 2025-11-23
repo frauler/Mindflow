@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import func, String, ForeignKey, BigInteger
+from sqlalchemy import func, String, ForeignKey, BigInteger, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.core.database import Base
 
@@ -13,7 +13,7 @@ class MediaModel(Base):
     url: Mapped[str] = mapped_column(String(128), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger(), nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     article: Mapped["ArticleModel"] = relationship(back_populates="medias")
 

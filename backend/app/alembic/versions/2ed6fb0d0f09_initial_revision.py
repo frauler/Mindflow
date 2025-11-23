@@ -1,8 +1,8 @@
-"""Initial revision
+"""Initial Revision
 
-Revision ID: 42a482d5b5e5
+Revision ID: 2ed6fb0d0f09
 Revises: 
-Create Date: 2025-11-19 19:02:43.366123
+Create Date: 2025-11-23 20:36:27.301140
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '42a482d5b5e5'
+revision: str = '2ed6fb0d0f09'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(length=25), nullable=False),
     sa.Column('normalized_name', sa.String(length=25), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name'),
     sa.UniqueConstraint('normalized_name')
@@ -37,8 +37,8 @@ def upgrade() -> None:
     sa.Column('hashed_password', sa.String(), nullable=False),
     sa.Column('is_admin', sa.Boolean(), nullable=False),
     sa.Column('bio', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('login'),
     sa.UniqueConstraint('username')
@@ -52,9 +52,9 @@ def upgrade() -> None:
     sa.Column('status', sa.Enum('draft', 'published', 'archived', name='article_status_enum'), server_default=sa.text("'draft'"), nullable=False),
     sa.Column('views_count', sa.BigInteger(), server_default='0', nullable=False),
     sa.Column('votes_score', sa.Integer(), server_default='0', nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.Column('published_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('published_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -73,7 +73,7 @@ def upgrade() -> None:
     sa.Column('file_name', sa.String(length=128), nullable=False),
     sa.Column('url', sa.String(length=128), nullable=False),
     sa.Column('file_size', sa.BigInteger(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['article_id'], ['articles.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -82,7 +82,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('article_id', sa.Integer(), nullable=False),
     sa.Column('value', sa.SmallInteger(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['article_id'], ['articles.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
