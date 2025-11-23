@@ -64,3 +64,19 @@ class UsersPublic(BaseModel):
     data: list[UserPublic]
 
     model_config = {"from_attributes": True}
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class UserWithToken(UserPublic):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class TokenPayload(BaseModel):
+    sub: str | None = None

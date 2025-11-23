@@ -8,7 +8,7 @@ from app.schemas.users import (
     UsersPublic,
     UserUpdate
 )
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 
 
 class UserRepository:
@@ -85,6 +85,17 @@ class UserRepository:
         result = await self.db.execute(select(self.model))
         users = result.scalars().all()
         return UsersPublic.model_validate({"data": users})
+    
+    async def authentificate(self, login, password) -> UserPublic | None:
+        db_user = await self.db.execute(
+            select(self.model).where(self.model.login == login)
+        )
+        obj = db_user.scalars().first()
+        if not obj:
+            return None
+        if not verify_password(password, obj.hashed_password):
+            return None
+        return UserPublic.model_validate(obj)
 
     # ---------------- UPDATE ----------------
     async def update_user_by_id(self, user_id: int, new_data: UserUpdate) -> UserPublic | None:

@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str
     SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 2  #  48 часов
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     POSTGRES_HOST: str
     POSTGRES_PORT: int
     POSTGRES_DB: str

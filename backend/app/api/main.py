@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.api.routers.v1 import article_tags, articles, medias, tags, users, votes, auth
+from app.api.routers.v1 import article_tags, articles, medias, tags, users, votes
+from app.api.routers.v1 import auth
 
 api_router = APIRouter()
 
