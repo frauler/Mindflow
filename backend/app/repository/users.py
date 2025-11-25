@@ -76,7 +76,7 @@ class UserRepository:
         obj = result.scalars().first()
         return UserPublic.model_validate(obj) if obj else None
 
-    async def get_all_users(self) -> UsersPublic:
+    async def get_all_users(self) -> list:
         """Получение списка всех пользователей.
 
         Returns:
@@ -84,7 +84,7 @@ class UserRepository:
         """
         result = await self.db.execute(select(self.model))
         users = result.scalars().all()
-        return UsersPublic.model_validate({"data": users})
+        return users
     
     async def authentificate(self, login, password) -> UserPublic | None:
         db_user = await self.db.execute(

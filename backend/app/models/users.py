@@ -9,7 +9,7 @@ class UserModel(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column(String(25), unique=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(25), unique=False, nullable=False)
     login: Mapped[str] = mapped_column(String(25), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(), nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean(), nullable=False)
