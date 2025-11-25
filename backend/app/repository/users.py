@@ -1,3 +1,4 @@
+from typing import Any
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users import UserModel
@@ -34,7 +35,6 @@ class UserRepository:
             UserPublic: Представление созданного пользователя.
         """
         user_create = UserCreate.model_validate({
-            "username": user.username,
             "login": user.login,
             "hashed_password": get_password_hash(user.password),
             "is_admin": False,
@@ -98,7 +98,7 @@ class UserRepository:
         return UserPublic.model_validate(obj)
 
     # ---------------- UPDATE ----------------
-    async def update_user_by_id(self, user_id: int, new_data: UserUpdate) -> UserPublic | None:
+    async def update_user_by_id(self, user_id: int, new_data: dict) -> Any | None:
         """Обновление данных пользователя по ID.
 
         Args:
@@ -111,7 +111,25 @@ class UserRepository:
         await self.db.execute(
             update(self.model)
             .where(self.model.id == user_id)
-            .values(**new_data.model_dump())
+            .values(**new_data)
+        )
+        await self.db.commit()
+        return await self.get_user_by_id(user_id)
+    
+    async def update_user_password(self, user_id: int, new_hashed_password: str) -> Any | None:
+        """Обновление данных пользователя по ID.
+
+        Args:
+            user_id: Идентификатор пользователя.
+            new_password: Новые пароль пользователя.
+
+        Returns:
+            UserPublic | None: Обновлённый пользователь или None, если запись не найдена.
+        """
+        await self.db.execute(
+            update(self.model)
+            .where(self.model.id == user_id)
+            .values(hashed_password=new_hashed_password)
         )
         await self.db.commit()
         return await self.get_user_by_id(user_id)

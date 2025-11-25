@@ -7,7 +7,6 @@ class UserCreate(BaseModel):
     """
     Модель для добавления пользователя в базу данных
     """
-    username: str = Field(..., description="Имя пользователя")
     login: str = Field(..., description="Логин пользователя")
     hashed_password: str = Field(..., description="Хэш-пароль пользователя")
     is_admin: bool = False
@@ -18,19 +17,16 @@ class UserRegister(BaseModel):
     Модель для регистрации пользователя
     Используется для передачи параметров через API
     """
-    username: str
     login: str
-    password: str
+    password: str = Field(min_length=8, max_length=128)
 
 
 class UserUpdate(BaseModel):
     """
     Модель для обновления данных пользователя
     """
-    username: Optional[str] = None
-    login: Optional[str] = None
-    password: Optional[str] = None
-    bio: Optional[str] = None
+    real_name: Optional[str] | None = Field(default=None, description="Реальное имя пользователя")
+    bio: Optional[str] | None = Field(default=None, description="Описание пользователя")
 
 
 class UserPasswordUpdate(BaseModel):
@@ -38,8 +34,8 @@ class UserPasswordUpdate(BaseModel):
     Модель для обновления пароля пользователя
     Используется для передачи параметров через API
     """
-    current_password: str = Field(min_length=8, max_length=128)
-    new_password: str = Field(min_length=8, max_length=128)
+    current_password: str
+    new_password: str # = Field(min_length=8, max_length=128)
 
 
 class UserPublic(BaseModel):
@@ -48,7 +44,7 @@ class UserPublic(BaseModel):
     """
     id: int
     login: str
-    username: str
+    real_name: Optional[str]
     bio: Optional[str]
     is_admin: bool
     created_at: datetime
