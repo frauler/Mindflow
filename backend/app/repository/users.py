@@ -21,7 +21,7 @@ class UserRepository:
         Args:
             db: Асинхронная сессия базы данных.
         """
-        self.db = db
+        self.session = db
         self.model = UserModel
 
     # ---------------- CREATE ----------------
@@ -40,9 +40,9 @@ class UserRepository:
             "is_admin": False,
         })
         obj = self.model(**user_create.model_dump())
-        self.db.add(obj)
-        await self.db.commit()
-        await self.db.refresh(obj)
+        self.session.add(obj)
+        await self.session.commit()
+        await self.session.refresh(obj)
         return UserPublic.model_validate(obj)
 
     # ---------------- READ ----------------
@@ -55,7 +55,7 @@ class UserRepository:
         Returns:
             UserPublic | None: Найденный пользователь или None, если запись не найдена.
         """
-        result = await self.db.execute(
+        result = await self.session.execute(
             select(self.model).where(self.model.id == user_id)
         )
         obj = result.scalars().first()
@@ -70,7 +70,7 @@ class UserRepository:
         Returns:
             UserPublic | None: Найденный пользователь или None, если запись не найдена.
         """
-        result = await self.db.execute(
+        result = await self.session.execute(
             select(self.model).where(self.model.login == search_login)
         )
         obj = result.scalars().first()
@@ -82,12 +82,12 @@ class UserRepository:
         Returns:
             UsersPublic: Обёртка с массивом пользователей.
         """
-        result = await self.db.execute(select(self.model))
+        result = await self.session.execute(select(self.model))
         users = result.scalars().all()
         return users
     
     async def authentificate(self, login, password) -> UserPublic | None:
-        db_user = await self.db.execute(
+        db_user = await self.session.execute(
             select(self.model).where(self.model.login == login)
         )
         obj = db_user.scalars().first()
@@ -106,14 +106,14 @@ class UserRepository:
             new_data: Новые данные пользователя.
 
         Returns:
-            UserPublic | None: Обновлённый пользователь или None, если запись не найдена.
+            UserPublic: Обновлённый пользователь или None, если запись не найдена.
         """
-        await self.db.execute(
+        await self.session.execute(
             update(self.model)
             .where(self.model.id == user_id)
             .values(**new_data)
         )
-        await self.db.commit()
+        await self.session.commit()
         return await self.get_user_by_id(user_id)
     
     async def update_user_password(self, user_id: int, new_hashed_password: str) -> Any | None:
@@ -126,12 +126,12 @@ class UserRepository:
         Returns:
             UserPublic | None: Обновлённый пользователь или None, если запись не найдена.
         """
-        await self.db.execute(
+        await self.session.execute(
             update(self.model)
             .where(self.model.id == user_id)
             .values(hashed_password=new_hashed_password)
         )
-        await self.db.commit()
+        await self.session.commit()
         return await self.get_user_by_id(user_id)
 
     # ---------------- DELETE ----------------
@@ -148,9 +148,9 @@ class UserRepository:
         if user is None:
             return None
 
-        await self.db.execute(
+        await self.session.execute(
             delete(self.model)
             .where(self.model.id == user_id)
         )
-        await self.db.commit()
+        await self.session.commit()
         return user

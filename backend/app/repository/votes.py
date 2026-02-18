@@ -7,12 +7,12 @@ from app.repository.articles import ArticlesRepository
 class VotesRepository:
     """Репозиторий для работы с голосами пользователей."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, session: AsyncSession):
         """Инициализация репозитория.
 
         db: Асинхронная сессия базы данных.
         """
-        self.db = db
+        self.session = session
         self.model = VoteModel
 
     # ---------------- CREATE ----------------
@@ -22,12 +22,12 @@ class VotesRepository:
         vote: Схема с данными для нового голоса.
         """
         obj = self.model(**vote.model_dump())
-        self.db.add(obj)
-        await self.db.commit()
-        await self.db.refresh(obj)
+        self.session.add(obj)
+        await self.session.commit()
+        await self.session.refresh(obj)
 
         # Обновляем количество голосов на статье
-        article_repo = ArticlesRepository(self.db)
+        article_repo = ArticlesRepository(self.session)
         await article_repo.change_votes_score(vote.article_id, 1)
 
         return VotePublic.model_validate(obj)
@@ -39,7 +39,7 @@ class VotesRepository:
         user_id: ID пользователя.
         article_id: ID статьи.
         """
-        result = await self.db.execute(
+        result = await self.session.execute(
             select(self.model).where(
                 (self.model.user_id == user_id) &
                 (self.model.article_id == article_id)
@@ -50,7 +50,7 @@ class VotesRepository:
 
     async def get_all_votes(self) -> VotesPublic:
         """Возвращает все голоса в базе."""
-        result = await self.db.execute(select(self.model))
+        result = await self.session.execute(select(self.model))
         votes = result.scalars().all()
         return VotesPublic.model_validate({"data": votes})
 
@@ -65,13 +65,13 @@ class VotesRepository:
         if vote is None:
             return None
 
-        await self.db.execute(
+        await self.session.execute(
             delete(self.model).where(self.model.id == vote.id)
         )
-        await self.db.commit()
+        await self.session.commit()
 
         # Уменьшаем количество голосов на статье
-        article_repo = ArticlesRepository(self.db)
+        article_repo = ArticlesRepository(self.session)
         await article_repo.change_votes_score(article_id, -1)
 
         return vote

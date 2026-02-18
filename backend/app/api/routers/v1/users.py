@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.security import get_password_hash, verify_password
 from app.repository.users import UserRepository
+from app.repository.articles import ArticlesRepository
 from app.api.deps import (
     get_current_active_admin,
     SessionDep,
@@ -15,15 +16,19 @@ from app.schemas.users import (
     UserPublic,
     UsersPublic
 )
+from app.schemas.articles import (
+    ArticlesPublic,
+    ArticleStatus
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post(
-    "/", 
-    dependencies=[Depends(get_current_active_admin)],
-    response_model=UserPublic,
-    status_code=status.HTTP_200_OK
-)
+        "/", 
+        dependencies=[Depends(get_current_active_admin)],
+        response_model=UserPublic,
+        status_code=status.HTTP_200_OK
+    )
 async def create_user(session: SessionDep, user_in: UserRegister) -> Any:
     user_repository = UserRepository(session)
     user = await user_repository.get_user_by_login(user_in.login)
@@ -39,10 +44,10 @@ async def create_user(session: SessionDep, user_in: UserRegister) -> Any:
 
 
 @router.get(
-    "/{login}",
-    response_model=UserPublic,
-    status_code=status.HTTP_200_OK
-)
+        "/{login}",
+        response_model=UserPublic,
+        status_code=status.HTTP_200_OK
+    )
 async def read_user(session: SessionDep, login: str) -> Any:
     user_repository = UserRepository(session)
     user = await user_repository.get_user_by_login(login)
@@ -53,10 +58,10 @@ async def read_user(session: SessionDep, login: str) -> Any:
 
 
 @router.get(
-    "/",
-    response_model=UsersPublic,
-    status_code=status.HTTP_200_OK
-)
+        "/",
+        response_model=UsersPublic,
+        status_code=status.HTTP_200_OK
+    )
 async def read_all_users(session: SessionDep) -> Any:
     user_repository = UserRepository(session)
     all_users = await user_repository.get_all_users()
@@ -70,10 +75,10 @@ def read_user_me(current_user: CurrentUser) -> Any:
 
 
 @router.patch(
-    "/me",
-    response_model=UserPublic,
-    status_code=status.HTTP_200_OK
-)
+        "/me",
+        response_model=UserPublic,
+        status_code=status.HTTP_200_OK
+    )
 async def update_user_me(session: SessionDep, user_in: UserUpdate, current_user: CurrentUser) -> Any:
     user_repository = UserRepository(session)
     update_data = user_in.model_dump(exclude_unset=True)
@@ -83,10 +88,10 @@ async def update_user_me(session: SessionDep, user_in: UserUpdate, current_user:
 
 
 @router.patch(
-    "/me/password",
-    response_model=UserPublic,
-    status_code=status.HTTP_200_OK
-)
+        "/me/password",
+        response_model=UserPublic,
+        status_code=status.HTTP_200_OK
+    )
 async def update_password_me(session: SessionDep, body: UserPasswordUpdate, current_user: CurrentUser) -> Any:
     user_repository = UserRepository(session)
     if not verify_password(body.current_password, current_user.hashed_password):
@@ -99,3 +104,30 @@ async def update_password_me(session: SessionDep, body: UserPasswordUpdate, curr
     user_updated = await user_repository.update_user_password(current_user.id, hashed_password)
     
     return UserPublic(**user_updated.__dict__)
+
+
+@router.get("/{login}/articles", response_model=ArticlesPublic, status_code=status.HTTP_200_OK)
+async def get_user_articles(
+        session: SessionDep,
+        login: str,
+        current_user: CurrentUser,
+        status: str = ArticleStatus.published,
+        limit: int = 10,
+        offset: int = 0
+    ):
+    article_repository = ArticlesRepository(session)
+    if status != ArticleStatus.published:
+        if status not in ArticleStatus:
+            raise HTTPException(
+                status_code=406,
+                detail="Переданы неверные параметры"
+            )
+        if not current_user.is_admin:
+            raise HTTPException(
+                status_code=403,
+                detail="Пользователь не имеет прав для выполнения действия"
+            )
+
+    articles = await article_repository.get_all_articles(limit, offset, login, status)
+
+    return ArticlesPublic(data=articles)

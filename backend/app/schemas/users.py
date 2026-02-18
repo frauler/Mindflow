@@ -18,7 +18,7 @@ class UserRegister(BaseModel):
     Используется для передачи параметров через API
     """
     login: str
-    password: str = Field(min_length=8, max_length=128)
+    password: str # = Field(min_length=8, max_length=128)
 
 
 class UserUpdate(BaseModel):

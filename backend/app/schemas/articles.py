@@ -8,11 +8,10 @@ class ArticleCreate(BaseModel):
     """
     Модель для добавления статьи в базу данных
     """
-    author_id: int = Field(..., description="ID автора статьи")
+    author_id: Optional[int] = Field(..., description="ID автора статьи")
     title: str = Field(..., description="Заголовок статьи")
     summary: str = Field(..., description="Краткое предисловие статьи")
     body: str = Field(..., description="Основной текст с содержанием статьи")
-    status: ArticleStatus = Field(ArticleStatus.draft, description="Статус статьи")
 
 
 class ArticleUpdate(BaseModel):
@@ -23,7 +22,7 @@ class ArticleUpdate(BaseModel):
 
 class ArticleStatusUpdate(BaseModel):
     status: ArticleStatus = Field(..., description="Новый статус")
-    published_at: datetime = None
+    published_at: Optional[datetime] = None
 
 
 class ArticleViewsUpdate(BaseModel):
